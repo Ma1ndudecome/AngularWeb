@@ -2,18 +2,24 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { TokenResponse } from './auth.interface';
 import { tap } from 'rxjs';
+import { CookieService } from 'ngx-cookie-service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   http = inject(HttpClient)
+  cookieService = inject(CookieService)
   baseApiUrl = 'https://icherniakov.ru/yt-course/auth/'
 
   token : string | null = null
   refresh: string | null = null
 
   get isAuth(){
+    if(!this.token){
+      this.token = this.cookieService.get('token')
+    }
+
     return !!this.token
   }
   login(payload:{username:string, password:string}){
@@ -28,6 +34,8 @@ export class AuthService {
         tap(val=>{
           this.token = val.access_token
           this.refresh = val.refresh_token
+          this.cookieService.set('token', this.token)
+          this.cookieService.set('refresh', this.refresh)
 
         })
     )
